@@ -24,3 +24,6 @@ coverage/
 .vscode/
 .idea/
 *.log
+
+# Preview launch settings contain this machine's folder path
+.claude/launch.json
