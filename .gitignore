@@ -1,0 +1,26 @@
+# Secrets: never commit
+.env
+.env.*
+!.env.example
+
+# Local data (mirrored Studium content, DB, backups, downloads)
+/data/
+*.sqlite
+*.sqlite-journal
+*.db
+*.db-wal
+*.db-shm
+
+# Build / deps
+node_modules/
+.next/
+dist/
+out/
+coverage/
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.log

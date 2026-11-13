@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1794473009990,
+      "tag": "0000_polite_sumo",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794474810010,
+      "tag": "0001_daily_omega_flight",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794475331806,
+      "tag": "0002_vengeful_malice",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794489264738,
+      "tag": "0003_regular_marvel_boy",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794492676128,
+      "tag": "0004_outstanding_karma",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794558342352,
+      "tag": "0005_cheerful_silk_fever",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794559538731,
+      "tag": "0006_mature_yellow_claw",
+      "breakpoints": true
+    }
+  ]
+}

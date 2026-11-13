@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+/* Colors are CSS variables so light/dark needs no per-element variants.
+   Explicit choice (data-theme) wins; otherwise the OS setting decides. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #eef0f4;
+  --border: #dfe2e8;
+  --text: #171a21;
+  --muted: #626a7a;
+  --accent: #2459d6;
+  --accent-soft: #e4ecff;
+  --danger: #c0392b;
+  --danger-soft: #fdecea;
+  --warn: #a45f00;
+  --warn-soft: #fff3da;
+  --ok: #1e7d4f;
+  --ok-soft: #e3f5ec;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1115;
+    --surface: #171a21;
+    --surface-2: #1f232c;
+    --border: #2b303b;
+    --text: #e8eaf0;
+    --muted: #98a0b0;
+    --accent: #7aa5ff;
+    --accent-soft: #1c2740;
+    --danger: #ff8a7a;
+    --danger-soft: #3a1d1a;
+    --warn: #f0b354;
+    --warn-soft: #33270f;
+    --ok: #6fd3a0;
+    --ok-soft: #14301f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1115;
+  --surface: #171a21;
+  --surface-2: #1f232c;
+  --border: #2b303b;
+  --text: #e8eaf0;
+  --muted: #98a0b0;
+  --accent: #7aa5ff;
+  --accent-soft: #1c2740;
+  --danger: #ff8a7a;
+  --danger-soft: #3a1d1a;
+  --warn: #f0b354;
+  --warn-soft: #33270f;
+  --ok: #6fd3a0;
+  --ok-soft: #14301f;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.tnum { font-variant-numeric: tabular-nums; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.9s linear infinite; }
+
+/* Show only the theme button that switches away from the current theme. */
+.theme-light { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-light { display: block; }
+  :root:not([data-theme="light"]) .theme-dark { display: none; }
+}
+:root[data-theme="dark"] .theme-light { display: block; }
+:root[data-theme="dark"] .theme-dark { display: none; }
+
+/* ---- Rendered pages (Markdown) ---- */
+.prose { font-size: 15px; line-height: 1.65; overflow-wrap: anywhere; }
+.prose > :first-child { margin-top: 0; }
+.prose h1 { font-size: 1.6rem; font-weight: 650; letter-spacing: -0.01em; margin: 1.6em 0 0.5em; }
+.prose h2 { font-size: 1.25rem; font-weight: 650; margin: 1.5em 0 0.4em; padding-bottom: 0.25em; border-bottom: 1px solid var(--border); }
+.prose h3 { font-size: 1.05rem; font-weight: 650; margin: 1.3em 0 0.3em; }
+.prose p, .prose ul, .prose ol, .prose pre, .prose blockquote, .prose .table-wrap { margin: 0.7em 0; }
+.prose ul { list-style: disc; padding-left: 1.4em; }
+.prose ol { list-style: decimal; padding-left: 1.4em; }
+.prose li { margin: 0.2em 0; }
+.prose li.task { list-style: none; margin-left: -1.3em; }
+.prose li.task input { margin-right: 0.45em; width: 1em; height: 1em; vertical-align: -0.1em; accent-color: var(--accent); cursor: pointer; }
+.prose a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.prose a.wikilink { text-decoration: none; background: var(--accent-soft); padding: 0.05em 0.35em; border-radius: 5px; }
+.prose a.wikilink-new { background: transparent; border: 1px dashed var(--border); color: var(--muted); }
+.prose code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88em; background: var(--surface-2); padding: 0.12em 0.35em; border-radius: 4px; }
+.prose pre { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 0.8em 1em; overflow-x: auto; }
+.prose pre code { background: none; padding: 0; font-size: 0.85em; }
+.prose blockquote { border-left: 3px solid var(--border); padding-left: 1em; color: var(--muted); }
+.prose blockquote.callout { border: 1px solid var(--border); border-left-width: 4px; border-radius: 8px; padding: 0.6em 1em; color: var(--text); background: var(--surface-2); }
+.prose .callout > :first-child { margin-top: 0; } .prose .callout > :last-child { margin-bottom: 0; }
+.prose .callout-title { font-weight: 650; margin-bottom: 0.2em; }
+.prose .callout-note, .prose .callout-info { border-left-color: var(--accent); background: var(--accent-soft); }
+.prose .callout-tip { border-left-color: var(--ok); background: var(--ok-soft); }
+.prose .callout-warning { border-left-color: var(--warn); background: var(--warn-soft); }
+.prose .callout-important { border-left-color: var(--danger); background: var(--danger-soft); }
+.prose .table-wrap { overflow-x: auto; }
+.prose table { border-collapse: collapse; font-size: 0.93em; }
+.prose th, .prose td { border: 1px solid var(--border); padding: 0.35em 0.7em; text-align: left; min-width: 3em; height: 2em; }
+.prose th { background: var(--surface-2); font-weight: 600; }
+.prose hr { border: 0; border-top: 1px solid var(--border); margin: 1.5em 0; }
+.prose img { max-width: 100%; border-radius: 8px; }
+.prose .math-block { overflow-x: auto; margin: 0.9em 0; }
+.prose .embed-video { position: relative; aspect-ratio: 16 / 9; margin: 0.9em 0; }
+.prose .embed-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 8px; }
+.prose a.item-card { display: flex; flex-direction: column; gap: 0.1em; text-decoration: none; color: var(--text); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 8px; padding: 0.55em 0.9em; margin: 0.7em 0; background: var(--surface); }
+.prose a.item-card:hover { background: var(--surface-2); }
+.prose .item-card-title { font-weight: 600; }
+.prose .item-card-meta { font-size: 0.82em; color: var(--muted); }
+mark { background: var(--warn-soft); color: inherit; border-radius: 3px; padding: 0 0.1em; }
