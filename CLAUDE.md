@@ -43,7 +43,7 @@ Requires Node >= 23.6. Migrations in `drizzle/` are applied automatically when t
 - UU's TimeEdit feed has **no course codes**. The summary is `<student groups>, <Swedish course name>.  , <Activity>` (e.g. `F3.A, F3.B1-2, Reglerteknik I.  , Laboration`), and locations are prefixed `Plats: `. Public holidays arrive as all-day events without a course.
 - Some Studium courses have English names, so name matching fails for them. Unmatched names become schedule-only courses (`timeedit:<slug>`) that the user links once on the Sync page; the link is stored in `course_aliases`.
 - The user keeps active enrollments in courses that are finished but not yet reported; "active in Canvas" does not mean "currently studying". They can be hidden under Settings.
-- Ladok has no student API (manual / CSV paste, Phase 5).
+- Ladok has no student API. Results come in through the Resultatintyg PDF (Ladok → Intyg) or pasted text. Verified on a real certificate 2026-11-14: the import summed to exactly Ladok's printed total.
 
 ## Development gotcha
 
@@ -169,7 +169,7 @@ src/instrumentation.ts starts the scheduler inside the Next server process
 - Exam registration deadlines become `signup` tasks, so they get the escalating 3 d / 1 d / same-morning reminders. Exams from TimeEdit get a row in `exams` only once the user saves something about them (`sourceItemId`).
 - Tasks have `projectId` and a third open status, `doing` (project board column). Everything outside the project board treats `doing` as open.
 - Project time = timers on `project:<id>` plus timers on the project's tasks. An active project's weekly budget is added to the workload view per study day (current week: minus what is already logged) under the key `project:<id>`.
-- Credits are stored as tenths of hp (`degree_courses.hp`), so 7.5 hp sums exactly. A failing or missing grade keeps a course `ongoing`. Ladok import requires a course code AND credits per line; module rows have no code and are skipped. Import merges on course code.
+- Credits are stored as tenths of hp (`degree_courses.hp`), so 7.5 hp sums exactly. A failing or missing grade keeps a course `ongoing`. Ladok import (`degree/ladok.ts`, `degree/import.ts`) reads two layouts. The real **Resultatintyg** PDF has no course codes: rows under "Avslutade kurser" are finished courses, "(10,0 hp)" header lines under "Delar i ej avslutade kurser" are ongoing courses, and the part rows beneath them are skipped (their passed credits are only summed, to check the import against the printed "Totalt"). Tables with a code per line use the older rule (code AND credits required). Import merges on code, else on name, and fills codes from Studium courses with the same name. The certificate contains a personal number: the uploaded file and its text are never stored, and tests use made-up data only.
 - Career events are all-day entries merged into Today, Week and the feed via `careerAgenda`.
 - Course teachers come from `include[]=teachers` on the courses call and are stored on `courses.teachers` (not part of any item hash).
 

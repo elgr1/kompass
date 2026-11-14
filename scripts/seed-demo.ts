@@ -111,7 +111,7 @@ log(`project:${proj.id}`, proj.title, "", "project", 1, 80);
 log(`task:${t1.id}`, t1.title, "", "project", 3, 45);
 
 const ladok = parseLadok(["1MA013\tEnvariabelanalys\t10,0\t4\t2024-01-12", "1MA025\tLinjär algebra och geometri I\t5,0\t5\t2023-10-27", "1FA104\tMekanik I\t5,0\t4\t2024-03-15", "1TD433\tProgrammeringsteknik I\t5,0\tG\t2023-12-20", "1MA016\tFlervariabelanalys\t10,0\t3\t2024-06-03", "1FA102\tMekanik II\t5,0\tU\t2026-10-20"].join("\n"));
-for (const r of ladok.rows) db.insert(schema.degreeCourses).values({ code: r.code, name: r.name, hp: r.hpTenths, grade: r.grade, date: r.date, status: isPass(r.grade) ? "done" : "ongoing", category: r.code.startsWith("1MA") ? "Matematik" : "Teknisk fysik", source: "ladok" }).run();
+for (const r of ladok.rows) db.insert(schema.degreeCourses).values({ code: r.code, name: r.name, hp: r.hpTenths, grade: r.grade, date: r.date, status: isPass(r.grade) ? "done" : "ongoing", category: r.code?.startsWith("1MA") ? "Matematik" : "Teknisk fysik", source: "ladok" }).run();
 db.insert(schema.degreeCourses).values([
   { code: "1FA514", name: "Elektromagnetism", hp: 100, status: "ongoing", term: "HT2026", category: "Teknisk fysik", source: "manual" },
   { code: "1FA521", name: "Kvantfysik", hp: 100, status: "ongoing", term: "HT2026", category: "Teknisk fysik", source: "manual" },

@@ -8,7 +8,9 @@ import { getDb, isDemo as isDemoDb } from "@/lib/db";
 import { applications, careerEvents, contacts, degreeCourses, exams, milestones, projects, APPLICATION_STATUSES, APPLICATION_TYPES, type ApplicationStatus, type ApplicationType } from "@/lib/db/schema";
 import { defaultExjobbSteps } from "@/lib/career/logic";
 import { deleteApplication, getExjobb, saveExjobb, syncApplication, syncLinkedTask } from "@/lib/career/store";
-import { isPass, parseLadok } from "@/lib/degree/ladok";
+import { importLadok } from "@/lib/degree/import";
+import { parseLadok } from "@/lib/degree/ladok";
+import { extractPdfText } from "@/lib/files/pdf";
 import { backupDatabase, dataDir, exportAll } from "@/lib/backup";
 import { llmEnabled } from "@/lib/llm/extract";
 import { acknowledgeFeedback, buildRetrospective } from "@/lib/stats/store";
@@ -768,26 +770,21 @@ export async function moveProjectTaskAction(taskId: number, stage: string) {
 const DEGREE_STATUSES = ["done", "ongoing", "planned"] as const;
 const hpTenths = (v: string) => { const n = Number(v.replace(",", ".")); return Number.isFinite(n) && n >= 0 && n <= 300 ? Math.round(n * 10) : 0; };
 
-/** Imports pasted Ladok results. Existing courses are matched on course code and updated, never duplicated. */
+/**
+ * Imports Ladok results from pasted text or from the Resultatintyg PDF. The file is read
+ * in memory only: neither it nor its text (which contains a personal number) is stored.
+ */
 export async function importLadokAction(formData: FormData) {
-  const db = getDb();
-  const { rows, skipped } = parseLadok(str(formData, "text").slice(0, 200_000));
-  let added = 0;
-  let updated = 0;
-  db.transaction((tx) => {
-    for (const r of rows) {
-      const status = isPass(r.grade) ? ("done" as const) : ("ongoing" as const);
-      const prev = tx.select().from(degreeCourses).where(eq(degreeCourses.code, r.code)).get();
-      if (prev) {
-        tx.update(degreeCourses).set({ name: r.name, hp: r.hpTenths, grade: r.grade, date: r.date, status }).where(eq(degreeCourses.id, prev.id)).run();
-        updated++;
-      } else {
-        tx.insert(degreeCourses).values({ code: r.code, name: r.name, hp: r.hpTenths, grade: r.grade, date: r.date, status, source: "ladok" }).run();
-        added++;
-      }
+  const file = formData.get("file");
+  let text = str(formData, "text");
+  if (file instanceof File && file.size > 0 && file.size < 5_000_000) {
+    try {
+      text = (await extractPdfText(new Uint8Array(await file.arrayBuffer()))).text;
+    } catch {
+      /* not a readable PDF: fall back to whatever was pasted */
     }
-  });
-  setSetting(db, "ladok_last", JSON.stringify({ added, updated, skipped, at: Date.now() }));
+  }
+  if (text) importLadok(getDb(), parseLadok(text.slice(0, 200_000)));
   refresh();
 }
 

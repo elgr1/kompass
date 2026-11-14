@@ -55,7 +55,7 @@ export default async function DegreePage({ searchParams }: { searchParams: Promi
     const passed = new Set(list.filter((c) => c.status === "done" && c.code).map((c) => c.code!.toUpperCase()));
     const known = new Set(list.map((c) => c.code).filter(Boolean));
     const missingFromStudium = db.select().from(coursesTable).all().filter((c) => c.active && !c.hidden && c.provider !== "timeedit" && c.code && !known.has(c.code));
-    const last = (() => { try { return JSON.parse(getSetting(db, "ladok_last") ?? "null") as { added: number; updated: number; skipped: number } | null; } catch { return null; } })();
+    const last = (() => { try { return JSON.parse(getSetting(db, "ladok_last") ?? "null") as { added: number; updated: number; skipped: number; matchesLadok?: boolean | null; importedTenths?: number; ladokTotalTenths?: number | null } | null; } catch { return null; } })();
     const pct = (x: number) => `${Math.min(100, (x / Math.max(1, target)) * 100)}%`;
     const groups = STATUSES.map((st) => ({ st, rows: list.filter((c) => c.status === st).sort((a, b) => termOrder(a.term ?? "") - termOrder(b.term ?? "") || (a.date ?? "").localeCompare(b.date ?? "") || a.name.localeCompare(b.name, "sv")) }));
     const categories = [...new Set(list.map((c) => c.category).filter(Boolean))];
@@ -140,11 +140,14 @@ export default async function DegreePage({ searchParams }: { searchParams: Promi
 
         <Card title={t(lang, "deg.import")} hint={t(lang, "deg.importHint")}>
           <form action={importLadokAction} className="space-y-2 p-4">
-            <textarea name="text" required rows={6} className={`${field} w-full font-mono text-xs`} placeholder={"1FA102\tMekanik II\t5,0\t4\t2025-01-17"} />
+            <label className="block text-xs text-muted">{t(lang, "deg.importFile")}<br /><input type="file" name="file" accept="application/pdf,.pdf" className="mt-1 text-sm" /></label>
+            <label className="block text-xs text-muted">{t(lang, "deg.importOr")}<textarea name="text" rows={5} className={`${field} mt-1 w-full font-mono text-xs`} placeholder={"Envariabelanalys 10,0 hp 3 2025-01-13"} /></label>
             <div className="flex flex-wrap items-center gap-3">
               <button className={btn}>{t(lang, "deg.importGo")}</button>
-              {last && <span className="text-xs text-muted">{t(lang, "deg.importLast", last)}</span>}
+              {last && <span className="text-xs text-muted">{t(lang, "deg.importLast", { added: last.added, updated: last.updated, skipped: last.skipped })}</span>}
             </div>
+            {last?.matchesLadok === true && <p className="text-xs font-medium text-ok">✓ {t(lang, "deg.importMatch", { hp: fmtHp(last.ladokTotalTenths ?? 0, lang) })}</p>}
+            {last?.matchesLadok === false && <p className="rounded-md bg-danger-soft px-2 py-1.5 text-xs text-danger">{t(lang, "deg.importMismatch", { got: fmtHp(last.importedTenths ?? 0, lang), want: fmtHp(last.ladokTotalTenths ?? 0, lang) })}</p>}
           </form>
         </Card>
       </>

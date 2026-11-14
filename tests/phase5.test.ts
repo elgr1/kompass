@@ -36,6 +36,62 @@ describe("Ladok paste", () => {
   });
 });
 
+describe("Ladok Resultatintyg (the real layout, which has no course codes)", () => {
+  // Same structure as a real certificate; names, grades and numbers are made up.
+  const intyg = [
+    "Resultatintyg Utskriftsdatum", "2026-11-14", "Namn Personnummer", "Test Testsson 20000101-0000",
+    "Avslutade kurser", "Benämning Omfattning Betyg Datum Not",
+    "Algebra och geometri 5,0 hp 4 2024-10-30 1", "Introduktion till teknisk fysik 5,0 hp G 2024-12-09 2", "Envariabelanalys 10,0 hp 3 2025-01-13 1", "Mekanik baskurs 7,5 hp 5 2025-06-01 1",
+    "Delar i ej avslutade kurser", "Benämning Omfattning Betyg Datum Not",
+    "Signaler och system (5,0 hp)", "Inlämningsuppgifter 1,0 hp G 2026-10-19 2", "Skriftlig tentamen 4,0 hp U 2026-10-22 1",
+    "Kvantfysik F (10,0 hp)", "Laborationer 1,5 hp G 2026-10-30 2",
+    "Kontrollera intyget på: https://student.ladok.se/verifiera/ Personnummer: 20000101-0000", "Verifierbart tom: 2027-02-12 Kontrollkod: ABC123", "Sida 1 / 2",
+    "", "Test Testsson Resultatintyg Utskriftsdatum", "20000101-0000 2026-11-14", "Summering", "Totalt varav tillgodoräknat Övrig tillgodoräknad utbildning", "30,0 hp",
+    "Noter och information", "60 högskolepoäng (hp) motsvarar ett års heltidsstudier.", "1 Betygsskala: Med beröm godkänd (5), Icke utan beröm godkänd (4), Godkänd (3), Underkänd (U)",
+  ].join("\n");
+
+  it("reads finished courses, ongoing courses and Ladok's total, without counting parts as courses", () => {
+    const r = parseLadok(intyg);
+    expect(r.rows.map((x) => [x.name, x.hpTenths, x.grade, x.date, x.status, x.code])).toEqual([
+      ["Algebra och geometri", 50, "4", "2024-10-30", "done", null],
+      ["Introduktion till teknisk fysik", 50, "G", "2024-12-09", "done", null],
+      ["Envariabelanalys", 100, "3", "2025-01-13", "done", null],
+      ["Mekanik baskurs", 75, "5", "2025-06-01", "done", null],
+      ["Signaler och system", 50, null, null, "ongoing", null],
+      ["Kvantfysik F", 100, null, null, "ongoing", null],
+    ]);
+    expect(r.skipped).toBe(3); // three part rows
+    expect(r.partsTenths).toBe(25); // 1,0 + 1,5 passed; the failed 4,0 does not count
+    expect(r.totalTenths).toBe(300);
+    expect(JSON.stringify(r)).not.toContain("20000101"); // the personal number is never carried along
+  });
+
+  it("also reads rows pasted without the headings", () => {
+    const r = parseLadok("Envariabelanalys 10,0 hp 3 2025-01-13 1\nTransformmetoder 5,0 hp U 2025-11-02 1");
+    expect(r.rows.map((x) => [x.name, x.status])).toEqual([["Envariabelanalys", "done"], ["Transformmetoder", "ongoing"]]);
+    expect(r.totalTenths).toBeNull();
+  });
+
+  it("imports without duplicates, fills in codes from Studium, and checks the sum against Ladok's", () => {
+    const db = createDb(":memory:");
+    const now = new Date("2026-11-14T09:00:00Z");
+    db.insert(coursesTable).values({ id: "canvas:1", provider: "canvas", externalId: "1", name: "Kvantfysik F 1FA535", shortName: "Kvantfysik F", code: "1FA535", color: "#000", firstSeenAt: now, lastSeenAt: now }).run();
+    db.insert(degreeCoursesTable).values({ name: "Envariabelanalys", hp: 100, status: "ongoing", term: "HT2024", category: "Matematik", source: "manual" }).run();
+
+    const s = importLadok(db, parseLadok(intyg), now);
+    expect(s).toMatchObject({ added: 5, updated: 1, skipped: 3, importedTenths: 300, ladokTotalTenths: 300, matchesLadok: true });
+    const all = db.select().from(degreeCoursesTable).all();
+    expect(all).toHaveLength(6);
+    expect(all.find((c) => c.name === "Envariabelanalys")).toMatchObject({ status: "done", grade: "3", term: "HT2024", category: "Matematik" }); // my own fields survive
+    expect(all.find((c) => c.name === "Kvantfysik F")).toMatchObject({ status: "ongoing", code: "1FA535", hp: 100 });
+    expect(summarize(all, 3000)).toMatchObject({ done: 275, ongoing: 150 });
+
+    expect(importLadok(db, parseLadok(intyg), now)).toMatchObject({ added: 0, updated: 6 }); // importing again changes nothing
+    expect(db.select().from(degreeCoursesTable).all()).toHaveLength(6);
+    expect(importLadok(db, parseLadok(intyg.replace("30,0 hp", "45,0 hp")), now).matchesLadok).toBe(false);
+  });
+});
+
 describe("degree summary", () => {
   const c = (hp: number, status: "done" | "ongoing" | "planned", category = "", term = "") => ({ hp, status, category, term });
   it("adds credits exactly and reports what is still unplanned", () => {
@@ -100,7 +156,8 @@ describe("contacts and exjobb timeline", () => {
 
 import { eq } from "drizzle-orm";
 import { createDb } from "../src/lib/db/index";
-import { applications, careerEvents, projects, tasks as tasksTable, timeEntries } from "../src/lib/db/schema";
+import { applications, careerEvents, courses as coursesTable, degreeCourses as degreeCoursesTable, projects, tasks as tasksTable, timeEntries } from "../src/lib/db/schema";
+import { importLadok } from "../src/lib/degree/import";
 import { careerAgenda, deleteApplication, getExjobb, saveExjobb, syncApplication, syncLinkedTask } from "../src/lib/career/store";
 import { getDeadlines } from "../src/lib/queries";
 import { getWeekLoads } from "../src/lib/plan/store";
