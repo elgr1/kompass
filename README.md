@@ -65,6 +65,8 @@ Requires Node.js 23.6 or later. Developed and used on macOS.
 
    Then open http://127.0.0.1:3210. The first sync is a silent baseline; changes after that appear on the Radar.
 
+On macOS you can instead double-click `Kompass.command` in the project folder: it starts the app in a Terminal window and opens the browser. Closing that window stops the app.
+
 ### Using it somewhere other than Uppsala
 
 Two places assume Uppsala and need editing for another institution:

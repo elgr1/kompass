@@ -32,6 +32,8 @@ npm run token:paste    # clipboard -> .env CANVAS_TOKEN (macOS), then verify
 npm run db:generate    # after editing src/lib/db/schema.ts: writes a migration into drizzle/
 ```
 
+`Kompass.command` is a double-click launcher for macOS (starts `npm run dev`, opens the browser, or just opens the browser if the app already answers). It finds its own folder even through a symlink, so a shortcut to it can live on the Desktop.
+
 Requires Node >= 23.6. Migrations in `drizzle/` are applied automatically when the DB is opened.
 
 ## Verified facts
